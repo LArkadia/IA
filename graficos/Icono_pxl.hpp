@@ -99,6 +99,7 @@ Icono_pxl::Icono_pxl(String icono_txt)
     }
     archivo_icono.close();
 }
+
 Vector<Vector<Shared_ptr<Color>>> Icono_pxl::pixel_art()
 {
     return cuadricula;
