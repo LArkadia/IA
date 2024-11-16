@@ -6,6 +6,11 @@ const int HEIGHT = 800;
 
 void eventos(SDL_Event& eventos);
 
+int root_x,root_y;
+int target_x,target_y;
+uint8_t status = 0;
+float escala = float(WIDTH/8)/7;
+
 int main(int argc, char const *argv[])
 {
     vsr::Screen window("Algoritmo A*",WIDTH,HEIGHT,SDL_RENDERER_ACCELERATED);
@@ -27,7 +32,37 @@ int main(int argc, char const *argv[])
 }
 
 void eventos(SDL_Event& evento){
+switch (evento.type)
+{
+case SDL_MOUSEBUTTONDOWN:
+    switch (evento.button.button)
+    {
+    case SDL_BUTTON_LEFT:
+        switch (status)
+        {
+        case 0:
+            root_x = evento.button.x/(escala*8);
+            root_y = evento.button.y/(escala*8);
+            status++;
+            break;
+        case 1:
+            target_x = evento.button.x/(escala*8);
+            target_y = evento.button.y/(escala*8);
+            status++;
+        break;
+        default:
+            break;
+        }
+        break;
+    
+    default:
+        break;
+    }
+    break;
 
+default:
+    break;
+}
 }
 
 
