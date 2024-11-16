@@ -1,7 +1,5 @@
 #include "algoritmos/A_star.hpp"
-#include "graficos/Pantalla.hpp"
-#include <cinttypes>
-#include <SDL2/SDL_render.h>
+#include "SDL_Visor/graphics/SDL_Visor.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 800;
@@ -10,23 +8,19 @@ void eventos(SDL_Event& eventos);
 
 int main(int argc, char const *argv[])
 {
-    Pantalla Ventana;
-    Ventana.crear_ventana("Algoritmo A*",WIDTH,HEIGHT);    
-    Ventana.crear_renderizador(SDL_RENDERER_ACCELERATED);
-    Ventana.Iniciar_ttf();
-    Ventana.Cargar_fuente("courier","graficos/texto/COURIERTXT.ttf",10);
-    auto* icono_HAR = new Icono_pxl("Iconos/HAR.txt");
-    auto* icono_ROOT = new Icono_pxl("Iconos/ROOT.txt");
-    Ventana.dibujar_icono((icono_HAR)->pixel_art(),8,8);
-    Ventana.dibujar_icono((icono_ROOT)->pixel_art(),0,0);
-    while (Ventana.manejar_eventos(eventos))
-    {
-        SDL_Delay(200);
-        Ventana.presentar_renderizador();
+    vsr::Screen window("Algoritmo A*",WIDTH,HEIGHT,SDL_RENDERER_ACCELERATED);
+    window.Init_TTF("courier","SDL_Visor/fonts/COURIERTXT.ttf",10);
+    vsr::Color Blanco(255,255,255,255);
 
+
+    while (window.Handle_events())
+    {
+        window.Clean_screen();
+        window.Show_text(10,10,"Hola mundo",Blanco);
+        window.Present_renderer();
+        SDL_Delay(200);
     }
     
-
 
 
     return 0;

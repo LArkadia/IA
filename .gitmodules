@@ -1,0 +1,3 @@
+[submodule "SDL_Visor"]
+	path = SDL_Visor
+	url = git@github.com:LArkadia/SDL_Visor.git
