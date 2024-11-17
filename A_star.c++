@@ -21,7 +21,8 @@ int main(int argc, char const *argv[])
     while (window.Handle_events())
     {
         window.Clean_screen();
-        window.Show_text(10,10,"Hola mundo",Blanco);
+        window.Draw_rectangle(10,10,10,10,Blanco);
+        window.Show_text(10,10,"Si Puto",Blanco);
         window.Present_renderer();
         SDL_Delay(200);
     }
