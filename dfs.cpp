@@ -6,12 +6,6 @@
 #include <cmath>
 #include <climits>
 using namespace std; 
-//Definicion del nuevo dato
-typedef long double ld;
-//Comparadores con presecion de 10-9
-const ld eps = 1e-9;
-bool greaterld(ld a, ld b){return a-b > eps;}      
-bool lessld(ld a, ld b){return b-a > eps;} 
 // Laberinto
 vector<vector<int>> maze = {
     {0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -26,67 +20,39 @@ vector<vector<int>> maze = {
 
 const int CELL_SIZE = 40; // Tamaño de cada celda en píxeles
 
-// Estructura para el nodo
-struct Node {
-    int x, y; // Coordenadas y costo acumulado para llegar a este nodo
-    ld cost;
-    bool operator>(const Node &other) const { return greaterld(cost,other.cost); } // Comparador para la cola de prioridad
-    bool operator<(const Node &other) const { return lessld(cost,other.cost); }
-};
 
-// Algoritmo Dijkstra
-vector<sf::Vector2i> dijkstra(sf::Vector2i start, sf::Vector2i end) {
-    int rows = maze.size();  // Número de filas
-    int cols = maze[0].size(); // Número de columnas
-
-    // Matriz de costos mínimos desde el nodo inicial
-    vector<vector<ld>> dist(rows, vector<ld>(cols, INT_MAX));
-    // Matriz para guardar el nodo previo en el camino más corto
-    vector<vector<sf::Vector2i>> prev(rows, vector<sf::Vector2i>(cols, {-1, -1}));
-    // Cola de prioridad para explorar los nodos
-    priority_queue<Node, vector<Node>, greater<Node>> pq;
-
-    // Inicializar el nodo de inicio
-    pq.push({start.x, start.y, (ld)0});
-    dist[start.x][start.y] = (ld)0;
-
-    // Direcciones posibles para moverse (derecha, abajo, izquierda, arriba)
-    vector<sf::Vector2i> directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0},{-1,-1},{1,1}};
-
-    // Bucle principal del algoritmo
-    while (!pq.empty()) {
-        Node current = pq.top();
-        pq.pop();
-
-        // Si llegamos al nodo final, termina el progrma
-        if (sf::Vector2i(current.x, current.y) == end)
-            break;
-
-        // Explorar vecinos
-        for (auto dir : directions) {
-            int nx = current.x + dir.x; // Nueva posición en x
-            int ny = current.y + dir.y; // Nueva posición en y
-
-            // Verificar si el vecino está dentro de los límites y es transitable
-            if (nx >= 0 && ny >= 0 && nx < rows && ny < cols && maze[nx][ny] == 0) {
-                ld cost_x=(nx-current.x)*(nx-current.x);
-                ld cost_y=(ny-current.y)*(ny-current.y);
-                ld new_cost = current.cost+sqrt(cost_x+cost_y); // Costo acumulado 
-                // Si encontramos un camino más corto, actualizamos
-                if (new_cost < dist[nx][ny]) {
-                    dist[nx][ny] = new_cost;
-                    prev[nx][ny] = {current.x, current.y};
-                    pq.push({nx, ny, new_cost});
-                }
+vector<sf::Vector2i> directions = {{0, 1}, {1, 0}, {0, -1}, {-1, 0}};
+void dfs(vector<int>current,vector<vector<int>>&visited,vector<vector<sf::Vector2i>>&prev,int &n,int &m){
+    if(visited[current[0]][current[1]])return;
+    visited[current[0]][current[1]]=1;
+    for(auto dir:directions){
+        int nx = current[0] + dir.x; // Nueva posición en x
+        int ny = current[1] + dir.y; // Nueva posición en y
+        if (nx >= 0 && ny >= 0 && nx <n && ny <m && maze[nx][ny] == 0){
+            if(!visited[nx][ny]){
+                prev[nx][ny]={current[0],current[1]};
+                dfs({nx,ny},visited,prev,n,m);
             }
         }
-    }
 
+    }
+}
+vector<sf::Vector2i> dfs_aux(sf::Vector2i start, sf::Vector2i end) {
+    int rows = maze.size();  // Número de filas
+    int cols = maze[0].size(); // Número de columnas
+    
+    // Matriz de visitados
+    vector<vector<int>> visited(rows, vector<int>(cols,0));
+    // Matriz para guardar el nodo previo en el camino más corto
+    vector<vector<sf::Vector2i>> prev(rows, vector<sf::Vector2i>(cols, {-1, -1}));
+    // Ejecutar dfs
+    dfs({start.x,start.y},visited,prev,rows,cols);
     // Reconstrucción del camino desde el nodo final al inicio
     vector<sf::Vector2i> path;
     for (sf::Vector2i at = end; at != sf::Vector2i{-1, -1}; at = prev[at.x][at.y]) {
         path.push_back(at);
     }
+    cout<<endl;
     reverse(path.begin(), path.end()); // Se invierte el camino para ir de inicio a fin
     return path;
 }
@@ -156,7 +122,7 @@ int main() {
 
         // Dibujar el camino más corto si el inicio y fin están definidos
         if (start != sf::Vector2i{-1, -1} && end != sf::Vector2i{-1, -1}) {
-            auto path = dijkstra(start, end);
+            auto path = dfs_aux(start, end);
             for (auto &pos : path) {
                 sf::RectangleShape cell(sf::Vector2f(CELL_SIZE - 1, CELL_SIZE - 1));
                 cell.setPosition(pos.y * CELL_SIZE, pos.x * CELL_SIZE);
@@ -164,6 +130,7 @@ int main() {
                 cell.setOutlineThickness(1);
                 cell.setOutlineColor(sf::Color::Black);
                 window.draw(cell); // Dibujar celda del camino
+                sf::sleep(sf::seconds(0.3));
             }
         }
 
