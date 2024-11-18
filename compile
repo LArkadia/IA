@@ -1,4 +1,0 @@
-#!/bin/fish
-g++ A_star.c++ -I/usr/include/SDL2 -L/usr/lib -lSDL2_image -lSDL2_ttf -lSDL2 -o A_star && ./A_star
-
-

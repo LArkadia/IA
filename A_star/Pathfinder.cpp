@@ -1,4 +1,4 @@
-
+#include <cinttypes>
 #include <vector>
 #include <string>
 
@@ -10,10 +10,6 @@ struct Cord
     uint16_t x;
     uint16_t y;
 };
-
-
-
-
 class Pathfinder
 {
 private:
@@ -21,8 +17,9 @@ private:
     {
     private:
         uint heuristic,accumulated,weight,ID;
+        A_star_cell* parent;
     public:
-        A_star_cell(Cord position, Cord start, Cord target);
+        A_star_cell(Cord position, Cord start, Cord target);        
         ~A_star_cell();
     };
     
@@ -38,6 +35,7 @@ public:
     Pathfinder(String map_file_path);
     void Set_start(uint16_t x,uint16_t y);
     void Set_target(uint16_t x,uint16_t y);
+    void Step();
     ~Pathfinder();
 };
 

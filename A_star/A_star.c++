@@ -1,5 +1,5 @@
-#include "algoritmos/A_star.hpp"
-#include "SDL_Visor/graphics/SDL_Visor.hpp"
+#include "Pathfinder.cpp"
+#include "../SDL_Visor/SDL_Visor.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 800;
@@ -14,7 +14,7 @@ float escala = float(WIDTH/8)/7;
 int main(int argc, char const *argv[])
 {
     vsr::Screen window("Algoritmo A*",WIDTH,HEIGHT,SDL_RENDERER_ACCELERATED);
-    window.Init_TTF("courier","SDL_Visor/fonts/COURIERTXT.ttf",10);
+    window.Init_TTF("courier","../SDL_Visor/fonts/COURIERTXT.ttf",10);
     vsr::Color Blanco(255,255,255,255);
 
 
