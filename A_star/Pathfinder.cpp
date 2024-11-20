@@ -22,10 +22,10 @@ Cord Pathfinder::Get_lower_open(){
 //void Pathfinder::Check_neightbours(Cord current){}
 
 void Pathfinder::Check_neightbours(Cord current) {
-    static const int dx[] = { -1, 1, 0, 0 };
-    static const int dy[] = { 0, 0, -1, 1 };
+    static const int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+    static const int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
 
-    for (int dir = 0; dir < 4; ++dir) {
+    for (int dir = 0; dir < 8; ++dir) {
         int nx = current.x + dx[dir];
         int ny = current.y + dy[dir];
 
@@ -61,7 +61,7 @@ uint16_t Pathfinder::A_star_cell::last_id = 0;
 Pathfinder::Pathfinder(String map_file_path)
 {
     start_counter = false;
-
+    path_found = false;
     std::ifstream infile(map_file_path);
     if (!infile.is_open()) {
         std::cerr << "Error: Can't open file: " << map_file_path << std::endl;
@@ -111,7 +111,7 @@ Pathfinder::Pathfinder(String map_file_path)
     start_counter = 0;
 }
 
-Pathfinder::Pathfinder(String map_file_path, uint (*heuristic)(Cord target, Cord current)):Pathfinder(map_file_path){
+Pathfinder::Pathfinder(String map_file_path, double (*heuristic)(Cord target, Cord current)):Pathfinder(map_file_path){
     heuristic_function = heuristic;
 }
 
@@ -158,25 +158,27 @@ bool Pathfinder::Step() {
     Cord current = Get_lower_open();
 //std::cout << "DF 5" <<std::endl;
     // Check if the target is reached
-    //std::cout << current.x << " " << current.y  << "target " << target.x << " " << target.y<< std::endl;
+//    std::cout << current.x << " " << current.y  << "target " << target.x << " " << target.y<< std::endl;
 
     if (current.x == target.x && current.y == target.y) {
-        std::cout << "Path found!" << std::endl;
+        //std::cout << "Path found!" << std::endl;
+        path_found = true;
         // Optional: Reconstruct path here by backtracking using parent nodes
         return true;
     }
 //std::cout << "DF 6" <<std::endl;
     // Remove current node from the open list
+//std::cout << "Removed from open " << current.x << " " << current.y << std::endl;
     open.erase(std::remove(open.begin(), open.end(), current), open.end());
 //std::cout << "DF 7" <<std::endl;
     // Add current node to the closed list
     closed.push_back(current);
 //std::cout << "DF 8" <<std::endl;
     // Explore neighbors
-    static const int dx[] = { -1, 1, 0, 0 }; // Directions for x (left, right)
-    static const int dy[] = { 0, 0, -1, 1 }; // Directions for y (up, down)
+    static const int dx[] = { -1, -1, -1, 0, 0, 1, 1, 1 };
+    static const int dy[] = { -1, 0, 1, -1, 1, -1, 0, 1 };
 //std::cout << "DF 9" <<std::endl;
-    for (int dir = 0; dir < 4; ++dir) {
+    for (int dir = 0; dir < 8; ++dir) {
         int nx = current.x + dx[dir];
         int ny = current.y + dy[dir];
 //std::cout << "DF 10" <<std::endl;
@@ -192,7 +194,7 @@ bool Pathfinder::Step() {
             continue;
         }
 //std::cout << "DF 12" <<std::endl;
-        uint tentative_g = grid[current.x][current.y]->Get_accumulated() + 1; // Assuming uniform cost
+        double tentative_g = grid[current.x][current.y]->Get_accumulated() + Distance(current,neighbour); 
 //std::cout << "DF 13" <<std::endl;
         // If the neighbor is not in the open list, create a new A_star_cell
         if (std::find(open.begin(), open.end(), neighbour) == open.end()) {
@@ -200,7 +202,8 @@ bool Pathfinder::Step() {
             open.push_back(neighbour);
         } else {
             // If the neighbor is already in the open list, check if the new path is better
-            if (tentative_g < grid[nx][ny]->Get_accumulated()) {
+//std::cout << "Tentative" << tentative_g << " Current: " << grid[nx][ny]->Get_accumulated() << std::endl;
+            if (tentative_g <= grid[nx][ny]->Get_accumulated()) {
                 grid[nx][ny]->Update(tentative_g,tentative_g + grid[nx][ny]->Get_heuristic(),current);
             }
         }
@@ -220,12 +223,28 @@ Vector<Vector<uint8_t>> Pathfinder::Get_textures() {
                 textures[x][y] = grid[x][y]->Get_texture();
             } else {
                 // Assign a default value (e.g., 0 for uninitialized cells)
-                textures[x][y] = 0;
+                textures[x][y] = 255;
             }
         }
     }
 
     return textures;
+}
+
+Vector<Cord> Pathfinder::Get_path()
+{
+    auto current = target;
+    Vector<Cord>path;
+    if (path_found)
+    {
+        while (current != start)
+        {
+            path.push_back(current);
+            current = grid[current.x][current.y]->Get_parent();
+        }
+        path.push_back(current);
+    }
+    return path;
 }
 
 Pathfinder::~Pathfinder(){
@@ -246,7 +265,7 @@ uint8_t Pathfinder::A_star_cell::GetTextureIndex(int dx, int dy)
                                 return 0; // Default case;
 }
 
-Pathfinder::A_star_cell::A_star_cell(Cord parent, Cord position, Cord target, uint accumulated, uint (*heuristic)(Cord target, Cord current))
+Pathfinder::A_star_cell::A_star_cell(Cord parent, Cord position, Cord target, uint accumulated, double (*heuristic)(Cord target, Cord current))
 {
     if (heuristic == nullptr)
     {
@@ -284,24 +303,22 @@ void Pathfinder::A_star_cell::Update(uint new_accumulated, uint new_weigth, Cord
     parent = new_parent;
     int dx = parent.x - position.x;
     int dy = parent.y - position.y;
-
-    // Map direction to texture index
     texture = GetTextureIndex(dx,dy);
 }
 
-uint Pathfinder::A_star_cell::Get_accumulated()
+double Pathfinder::A_star_cell::Get_accumulated()
 {
-    return uint(accumulated);
+    return accumulated;
 }
 
-uint Pathfinder::A_star_cell::Get_heuristic()
+double Pathfinder::A_star_cell::Get_heuristic()
 {
-    return uint(heuristic);
+    return heuristic;
 }
 
-uint Pathfinder::A_star_cell::Get_weight()
+double Pathfinder::A_star_cell::Get_weight()
 {
-    return uint(weight);
+    return weight;
 }
 
 Cord Pathfinder::A_star_cell::Get_parent()
@@ -316,4 +333,8 @@ uint8_t Pathfinder::A_star_cell::Get_texture()
 
 Pathfinder::A_star_cell::~A_star_cell()
 {
+}
+double Distance(const Cord& point1, const Cord& point2) {
+    // Use the distance formula: sqrt((x2 - x1)^2 + (y2 - y1)^2)
+    return std::sqrt(std::pow(point2.x - point1.x, 2) + std::pow(point2.y - point1.y, 2));
 }

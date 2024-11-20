@@ -8,7 +8,7 @@ void eventos(SDL_Event& eventos);
 std::map<String,vsr::Color*> Load_colors();
 Vector<vsr::Icon*> Load_arrow_Icons(vsr::Screen* window);
 void create_map_texture(String texture_name,uint16_t cell_widht,Vector<Vector<bool>> map_grid,vsr::Screen* window,vsr::Icon blocked_icon,vsr::Color &grid_color);
-uint heuristic(Cord target, Cord current);
+double heuristic(Cord target, Cord current);
 Cord start,target;
 uint8_t status = 0;
 float escala = float(WIDTH/8);
@@ -73,7 +73,7 @@ int main(int argc, char const *argv[])
                     y = 0;
                     for (auto &&cell : column)
                     {
-                        if (cell != 0)
+                        if (cell != 255)
                         {
                             area = {x*cell_width,y*cell_height,cell_width,cell_height};
                             window.Draw_texture(arrow_icons[cell]->Get_texture(),&area);
@@ -86,17 +86,26 @@ int main(int argc, char const *argv[])
                 
             break;
         default:
+
+                Vector<Cord> path = grid.Get_path();
+
+                for (auto &&path_cell : path){
+
+                    area = {path_cell.x *cell_width,path_cell.y*cell_height,cell_width,cell_height};
+                    window.Draw_filled_rectangle(path_cell.x *cell_width,path_cell.y*cell_height,cell_width,cell_height,*colors["Green"]);   
+                }
                 area = {start.x*cell_width,start.y*cell_height,cell_width,cell_height};
                 window.Draw_texture(start_icon.Get_texture(),&area);
                 area = {target.x*cell_width,target.y*cell_height,cell_width,cell_height};
                 window.Draw_texture(target_icon.Get_texture(),&area);
+                
                 x = 0;
                 for (auto &&column : textures)
                 {
                     y = 0;
                     for (auto &&cell : column)
                     {
-                        if (cell != 0)
+                        if (cell != 255)
                         {
                             SDL_Rect area = {x*cell_width,y*cell_height,cell_width,cell_height};
                             window.Draw_texture(arrow_icons[cell]->Get_texture(),&area);
@@ -112,7 +121,7 @@ int main(int argc, char const *argv[])
         
         window.Present_renderer();
         
-        SDL_Delay(200);
+        SDL_Delay(300);
     }
     
 
@@ -167,7 +176,7 @@ std::map<String,vsr::Color*> Load_colors(){
     std::map<String, vsr::Color*> colors = {
         {"White", new vsr::Color{255, 255, 255, 255}},
         {"Black", new vsr::Color(0, 0, 0, 255)},
-        {"Green", new vsr::Color(116, 198, 157, 255)},
+        {"Green", new vsr::Color(124, 252, 0, 255)},
         {"Orange",new vsr::Color(255, 128, 0, 255)},
         {"Red", new vsr::Color(237, 64, 64, 255)}
     };
@@ -216,6 +225,6 @@ void create_map_texture(String texture_name, uint16_t cell_size, Vector<Vector<b
     window->End_texture();
 }
 
-uint heuristic(Cord target, Cord current){
-    return target.x - current.x + target.y-current.y;
+double heuristic(Cord target, Cord current){
+    return std::max(std::abs(target.x - current.x), std::abs(target.y - current.y));
 }
