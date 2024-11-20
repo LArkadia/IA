@@ -8,11 +8,11 @@ void eventos(SDL_Event& eventos);
 std::map<String,vsr::Color*> Load_colors();
 Vector<vsr::Icon*> Load_arrow_Icons(vsr::Screen* window);
 void create_map_texture(String texture_name,uint16_t cell_widht,Vector<Vector<bool>> map_grid,vsr::Screen* window,vsr::Icon blocked_icon,vsr::Color &grid_color);
-
+uint heuristic(Cord target, Cord current);
 Cord start,target;
 uint8_t status = 0;
 float escala = float(WIDTH/8);
-
+Vector<Vector<bool>> mask;
 int main(int argc, char const *argv[])
 {
     //Create window
@@ -25,16 +25,91 @@ int main(int argc, char const *argv[])
     //Load Icons
     auto arrow_icons = Load_arrow_Icons(&window);
     vsr::Icon block_icon("../Iconos/BLOCK.png",window.Get_renderer());
+    vsr::Icon start_icon("../Iconos/START.png",window.Get_renderer());
+    vsr::Icon target_icon("../Iconos/TARGET.png",window.Get_renderer());
     //Load map_mask
-    auto grid = Pathfinder("map.txt");
-    escala = escala / grid.Get_grid_mask().size();
+    auto grid = Pathfinder("map.txt",heuristic);
+    mask = grid.Get_grid_mask();
+    escala = escala / mask.size();
     //Create background texture
-    create_map_texture("background", 32, grid.Get_grid_mask(), &window, block_icon,*colors["Black"]);
-
+    uint16_t cell_size = 32;
+    create_map_texture("background", cell_size, grid.Get_grid_mask(), &window, block_icon,*colors["Black"]);
+    Vector<Vector<uint8_t>> textures;
+    bool path_found = false;
+    int x,y;
+    uint16_t cell_width = WIDTH/mask.size();
+    uint16_t cell_height = HEIGHT/ mask[0].size();
+    SDL_Rect area;
     while (window.Handle_events())
     {   
         window.Clean_screen(*colors["White"]);
         window.Draw_saved_texture("background");
+        switch (status)
+        {
+        case 2:
+                grid.Set_start(start);
+                grid.Set_target(target); 
+                status++;
+            break;
+        case 3:
+                
+                if (!path_found)
+                {   
+                    path_found = grid.Step();
+                    if (path_found)
+                    {
+                        status++;
+                    }
+                    
+                }
+                area = {start.x*cell_width,start.y*cell_height,cell_width,cell_height};
+                window.Draw_texture(start_icon.Get_texture(),&area);
+                area = {target.x*cell_width,target.y*cell_height,cell_width,cell_height};
+                window.Draw_texture(target_icon.Get_texture(),&area);
+                textures = grid.Get_textures();
+                x = 0;
+                for (auto &&column : textures)
+                {
+                    y = 0;
+                    for (auto &&cell : column)
+                    {
+                        if (cell != 0)
+                        {
+                            area = {x*cell_width,y*cell_height,cell_width,cell_height};
+                            window.Draw_texture(arrow_icons[cell]->Get_texture(),&area);
+                        }
+                        
+                        y++;
+                    }
+                    x++;
+                }
+                
+            break;
+        default:
+                area = {start.x*cell_width,start.y*cell_height,cell_width,cell_height};
+                window.Draw_texture(start_icon.Get_texture(),&area);
+                area = {target.x*cell_width,target.y*cell_height,cell_width,cell_height};
+                window.Draw_texture(target_icon.Get_texture(),&area);
+                x = 0;
+                for (auto &&column : textures)
+                {
+                    y = 0;
+                    for (auto &&cell : column)
+                    {
+                        if (cell != 0)
+                        {
+                            SDL_Rect area = {x*cell_width,y*cell_height,cell_width,cell_height};
+                            window.Draw_texture(arrow_icons[cell]->Get_texture(),&area);
+                        }
+                        
+                        y++;
+                    }
+                    x++;
+                }
+            break;
+        }
+        
+        
         window.Present_renderer();
         
         SDL_Delay(200);
@@ -58,12 +133,20 @@ case SDL_MOUSEBUTTONDOWN:
         case 0:
             start.x = evento.button.x/(escala*8);
             start.y = evento.button.y/(escala*8);
-            status++;
+            if (mask[start.x][start.y])
+            {
+                status++;
+            }
+            
+            
             break;
         case 1:
             target.x = evento.button.x/(escala*8);
             target.y = evento.button.y/(escala*8);
-            status++;
+            if (mask[target.x][target.y])
+            {
+                status++;
+            }
         break;
         default:
             break;
@@ -131,4 +214,8 @@ void create_map_texture(String texture_name, uint16_t cell_size, Vector<Vector<b
     }
     
     window->End_texture();
+}
+
+uint heuristic(Cord target, Cord current){
+    return target.x - current.x + target.y-current.y;
 }
