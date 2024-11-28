@@ -52,7 +52,6 @@ vector<sf::Vector2i> dfs_aux(sf::Vector2i start, sf::Vector2i end) {
     for (sf::Vector2i at = end; at != sf::Vector2i{-1, -1}; at = prev[at.x][at.y]) {
         path.push_back(at);
     }
-    cout<<endl;
     reverse(path.begin(), path.end()); // Se invierte el camino para ir de inicio a fin
     return path;
 }
@@ -130,7 +129,6 @@ int main() {
                 cell.setOutlineThickness(1);
                 cell.setOutlineColor(sf::Color::Black);
                 window.draw(cell); // Dibujar celda del camino
-                sf::sleep(sf::seconds(0.3));
             }
         }
 
