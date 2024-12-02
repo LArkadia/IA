@@ -9,6 +9,7 @@ std::map<String,vsr::Color*> Load_colors();
 Vector<vsr::Icon*> Load_arrow_Icons(vsr::Screen* window);
 void create_map_texture(String texture_name,uint16_t cell_widht,Vector<Vector<bool>> map_grid,vsr::Screen* window,vsr::Icon blocked_icon,vsr::Color &grid_color);
 double heuristic(Cord target, Cord current);
+double movement(Cord target, Cord current);
 Cord start,target;
 uint8_t status = 0;
 float escala = float(WIDTH/8);
@@ -28,7 +29,7 @@ int main(int argc, char const *argv[])
     vsr::Icon start_icon("../Iconos/START.png",window.Get_renderer());
     vsr::Icon target_icon("../Iconos/TARGET.png",window.Get_renderer());
     //Load map_mask
-    auto grid = Pathfinder("map.txt",heuristic);
+    auto grid = Pathfinder("map.txt",heuristic,movement);
     mask = grid.Get_grid_mask();
     escala = escala / mask.size();
     //Create background texture
@@ -227,4 +228,9 @@ void create_map_texture(String texture_name, uint16_t cell_size, Vector<Vector<b
 
 double heuristic(Cord target, Cord current){
     return std::max(std::abs(target.x - current.x), std::abs(target.y - current.y));
+}
+
+double movement(Cord target, Cord current)
+{
+    return std::sqrt(std::pow(target.x - current.x,2) + std::pow(target.y - current.y,2));
 }

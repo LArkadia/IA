@@ -41,7 +41,7 @@ void Pathfinder::Check_neightbours(Cord current) {
             continue;
         }
 
-        uint tentative_g = grid[current.x][current.y]->Get_accumulated() + 1; // Assuming uniform cost
+        uint tentative_g = grid[current.x][current.y]->Get_accumulated() + movement_function(neighbour,current); // Assuming uniform cost
 
         // If neighbor is not in open list, add it
         if (std::find(open.begin(), open.end(), neighbour) == open.end()) {
@@ -111,8 +111,9 @@ Pathfinder::Pathfinder(String map_file_path)
     start_counter = 0;
 }
 
-Pathfinder::Pathfinder(String map_file_path, double (*heuristic)(Cord target, Cord current)):Pathfinder(map_file_path){
+Pathfinder::Pathfinder(String map_file_path, double (*heuristic)(Cord target, Cord current),double (*movement)(Cord target, Cord current)):Pathfinder(map_file_path){
     heuristic_function = heuristic;
+    movement_function = movement;
 }
 
 Vector<Vector<bool>> Pathfinder::Get_grid_mask(){

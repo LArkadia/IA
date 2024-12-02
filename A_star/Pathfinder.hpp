@@ -51,6 +51,7 @@ private:
     Vector<Cord> closed;
     bool path_found;
     double (*heuristic_function)(Cord target,Cord current); 
+    double (*movement_function)(Cord target,Cord current); 
     Cord start,target;
     uint8_t start_counter;
     //Functions
@@ -58,7 +59,7 @@ private:
     void Check_neightbours(Cord current);
 public:
     Pathfinder(String map_file_path);
-    Pathfinder(String map_file_path,double (*heuristic)(Cord target,Cord current));
+    Pathfinder(String map_file_path,double (*heuristic)(Cord target,Cord current),double (*movement)(Cord target,Cord current));
     Vector<Vector<bool>> Get_grid_mask();
     void Set_start(Cord start);
     void Set_target(Cord target);
