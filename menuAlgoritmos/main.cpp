@@ -1,6 +1,7 @@
 #include <SDL2/SDL.h>
 #include <SDL2/SDL_ttf.h>
 #include <iostream>
+#include <fstream>
 #include <algorithm>
 #include <queue>
 #include <stack>
@@ -26,16 +27,12 @@ const SDL_Color GRAY = {200, 200, 200, 255};
 enum State { SELECT_START, SELECT_GOAL, RUNNING };
 
 // Laberinto
-char maze[GRID_SIZE][GRID_SIZE] = {
-    {'_', '#', '_', '_', '_', '#', '_', '#'},
-    {'_', '#', '_', '#', '_', '_', '_', '_'},
-    {'_', '_', '_', '#', '#', '#', '#', '#'},
-    {'#', '_', '#', '#', '#', '#', '#', '#'},
-    {'_', '_', '_', '#', '_', '_', '_', '#'},
-    {'_', '_', '_', '#', '_', '#', '_', '_'},
-    {'_', '#', '_', '#', '_', '#', '_', '_'},
-    {'#', '_', '_', '_', '_', '#', '_', '_'}
-};
+std::vector<std::string> maze;
+int GRID_WIDTH = 0;
+int GRID_HEIGHT = 0;
+
+// Función para cargar el mapa desde un archivo
+bool loadMap(const std::string& filename);
 
 // Función para dibujar texto (requiere SDL_ttf)
 void drawText(SDL_Renderer* renderer, const char* text, int x, int y, SDL_Color color, int fontSize) {
@@ -84,6 +81,12 @@ void drawMaze(SDL_Renderer* renderer, const std::pair<int, int>& start, const st
 
 // Programa principal
 int main(int argc, char* argv[]) {
+    // Cargar mapa desde archivo
+    if (!loadMap("map.txt")) {
+        std::cerr << "Error loading map from file." << std::endl;
+        return -1;
+    }
+
     SDL_Init(SDL_INIT_VIDEO);
     TTF_Init(); 
 
@@ -180,6 +183,27 @@ int main(int argc, char* argv[]) {
 
 bool isValidCell(int x, int y) {
     return x >= 0 && x < GRID_SIZE && y >= 0 && y < GRID_SIZE && maze[y][x] == '_';
+}
+
+
+// Cargar el mapa desde el archivo
+bool loadMap(const std::string& filename) {
+    std::ifstream file(filename);
+    if (!file.is_open()) {
+        return false;
+    }
+
+    file >> GRID_WIDTH >> GRID_HEIGHT;
+    maze.resize(GRID_HEIGHT);
+
+    std::string line;
+    std::getline(file, line); // Salto de línea después de las dimensiones
+    for (int i = 0; i < GRID_HEIGHT; ++i) {
+        std::getline(file, line);
+        maze[i] = line;
+    }
+
+    return true;
 }
 
 void drawMaze(SDL_Renderer* renderer, const std::pair<int, int>& start, const std::pair<int, int>& goal, const std::vector<std::pair<int, int>>& path) {
