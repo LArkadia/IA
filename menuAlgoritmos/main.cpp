@@ -186,7 +186,6 @@ void drawMaze(SDL_Renderer* renderer, const std::pair<int, int>& start, const st
         }
     }
 
-
        // Dibujar inicio y objetivo
     if (start.first != -1) {
         SDL_Rect cell = {BUTTON_WIDTH + start.first * CELL_SIZE, start.second * CELL_SIZE, CELL_SIZE, CELL_SIZE};
@@ -199,7 +198,7 @@ void drawMaze(SDL_Renderer* renderer, const std::pair<int, int>& start, const st
         SDL_RenderFillRect(renderer, &cell);
     }
 
-    // Dibujar camino con un delay sin parpadeos
+    // Dibujar camino con un delay 
     for (size_t i = 0; i < path.size(); ++i) {
         // Limpiar la pantalla
         //SDL_SetRenderDrawColor(renderer, 0, 0, 0, 255); // Fondo negro
